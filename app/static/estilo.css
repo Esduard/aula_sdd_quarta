@@ -160,15 +160,37 @@ button,
 .listas__lista {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   min-height: var(--toque);
   padding: 0.5rem var(--espaco);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   background: var(--cor-superficie);
   color: var(--cor-texto);
-  font-weight: 600;
   text-decoration: none;
   overflow-wrap: anywhere;
+}
+
+.listas__nome {
+  font-weight: 600;
+}
+
+/* Progresso ("3 de 8 comprados"), na tela inicial e na tela da Lista */
+
+.progresso {
+  color: var(--cor-texto-suave);
+  font-weight: 400;
+}
+
+.listas__lista .progresso {
+  flex-shrink: 0;
+  font-size: 0.9375rem;
+}
+
+h1 + .progresso {
+  margin-top: -0.5rem;
+  margin-bottom: var(--espaco);
 }
 
 /* Tela da Lista */
@@ -191,18 +213,36 @@ button,
   list-style: none;
 }
 
+.itens li {
+  margin-bottom: 0.5rem;
+}
+
+/* O Item inteiro é o botão que alterna o estado: a área de toque ocupa a
+   largura toda da tela e tem altura maior que a mínima. */
 .itens__item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  min-height: var(--toque);
-  margin-bottom: 0.5rem;
-  padding: 0.5rem var(--espaco);
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.75rem var(--espaco);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-weight: 400;
+  text-align: left;
   overflow-wrap: anywhere;
+}
+
+/* Item comprado: riscado e esmaecido */
+.itens__item--comprado {
+  opacity: 0.55;
+}
+
+.itens__item--comprado .itens__nome {
+  text-decoration: line-through;
 }
 
 .itens__quantidade {

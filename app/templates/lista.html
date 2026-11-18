@@ -6,6 +6,7 @@
   <a class="voltar" href="{{ url_for('inicio') }}">&larr; Todas as Listas</a>
 
   <h1>{{ lista.nome }}</h1>
+  <p class="progresso">{{ lista.comprados }} de {{ lista.total_de_itens }} comprados</p>
 
   <form class="formulario" method="post"
         action="{{ url_for('adicionar_item', id_da_lista=lista.id) }}">
@@ -27,11 +28,25 @@
   {% if lista.itens %}
     <ul class="itens">
       {% for item in lista.itens %}
-        <li class="itens__item">
-          <span class="itens__nome">{{ item.nome }}</span>
-          {% if item.quantidade %}
-            <span class="itens__quantidade">{{ item.quantidade }}</span>
+        <li>
+          {# Tocar no Item alterna o estado: um formulário POST por Item, sem JavaScript. #}
+          {% if item.comprado %}
+            <form method="post"
+                  action="{{ url_for('voltar_item_para_pendente', id_da_lista=lista.id, id_do_item=item.id) }}">
+              <button type="submit" class="itens__item itens__item--comprado"
+                      aria-label="{{ item.nome }}: comprado. Tocar para voltar a pendente.">
+          {% else %}
+            <form method="post"
+                  action="{{ url_for('marcar_item_como_comprado', id_da_lista=lista.id, id_do_item=item.id) }}">
+              <button type="submit" class="itens__item"
+                      aria-label="{{ item.nome }}: pendente. Tocar para marcar como comprado.">
           {% endif %}
+                <span class="itens__nome">{{ item.nome }}</span>
+                {% if item.quantidade %}
+                  <span class="itens__quantidade">{{ item.quantidade }}</span>
+                {% endif %}
+              </button>
+            </form>
         </li>
       {% endfor %}
     </ul>

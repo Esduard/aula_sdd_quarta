@@ -12,8 +12,10 @@ from collections import namedtuple
 
 # Uma Lista como as consultas a devolvem, pronta para exibição. O ``id`` é
 # opaco e estável: é ele, e não o nome, que identifica a Lista.
-# ``itens`` traz os Itens da Lista na ordem em que foram adicionados.
-Lista = namedtuple("Lista", ["id", "nome", "itens"])
+# ``itens`` traz os Itens já ordenados para exibição: primeiro os pendentes,
+# depois os comprados, cada grupo na ordem em que os Itens foram adicionados.
+# ``total_de_itens`` e ``comprados`` são o progresso da Lista, já contado.
+Lista = namedtuple("Lista", ["id", "nome", "itens", "total_de_itens", "comprados"])
 
 # Um Item como as consultas o devolvem. O ``id`` é opaco e estável.
 # ``quantidade`` é texto livre ou ``None`` quando ausente. ``comprado`` é
@@ -92,6 +94,29 @@ class Listas:
         self._gravar(dados)
         return _para_item(registro)
 
+    def marcar_como_comprado(self, id_da_lista, id_do_item):
+        """Marca o Item como comprado, grava e o devolve.
+
+        Se a Lista não existir, ou o Item não existir nela, levanta
+        ``ErroNaoEncontrado`` e nada é gravado.
+        """
+        return self._mudar_estado(id_da_lista, id_do_item, comprado=True)
+
+    def voltar_para_pendente(self, id_da_lista, id_do_item):
+        """Devolve o Item ao estado pendente, grava e o devolve.
+
+        Se a Lista não existir, ou o Item não existir nela, levanta
+        ``ErroNaoEncontrado`` e nada é gravado.
+        """
+        return self._mudar_estado(id_da_lista, id_do_item, comprado=False)
+
+    def _mudar_estado(self, id_da_lista, id_do_item, comprado):
+        dados = self._ler()
+        registro = _achar_item(_achar_lista(dados, id_da_lista), id_do_item)
+        registro["comprado"] = comprado
+        self._gravar(dados)
+        return _para_item(registro)
+
     def _ler(self):
         """Lê o arquivo de dados; arquivo inexistente significa nenhuma Lista."""
         if not os.path.exists(self._caminho_do_arquivo):
@@ -111,10 +136,30 @@ def _achar_lista(dados, id_da_lista):
     raise ErroNaoEncontrado("Lista não encontrada.")
 
 
+def _achar_item(registro_da_lista, id_do_item):
+    for registro in registro_da_lista.get("itens", []):
+        if registro["id"] == id_do_item:
+            return registro
+    raise ErroNaoEncontrado("Item não encontrado.")
+
+
 def _para_lista(registro):
     # Listas gravadas antes de existirem Itens não têm a chave "itens".
-    itens = tuple(_para_item(item) for item in registro.get("itens", []))
-    return Lista(id=registro["id"], nome=registro["nome"], itens=itens)
+    # A ordenação é estável: dentro de cada grupo vale a ordem de adição,
+    # que é a ordem em que os Itens estão guardados.
+    itens = tuple(
+        sorted(
+            (_para_item(item) for item in registro.get("itens", [])),
+            key=lambda item: item.comprado,
+        )
+    )
+    return Lista(
+        id=registro["id"],
+        nome=registro["nome"],
+        itens=itens,
+        total_de_itens=len(itens),
+        comprados=sum(1 for item in itens if item.comprado),
+    )
 
 
 def _para_item(registro):

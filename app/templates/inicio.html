@@ -19,7 +19,10 @@
     <ul class="listas">
       {% for lista in listas %}
         <li>
-          <a class="listas__lista" href="{{ url_for('ver_lista', id_da_lista=lista.id) }}">{{ lista.nome }}</a>
+          <a class="listas__lista" href="{{ url_for('ver_lista', id_da_lista=lista.id) }}">
+            <span class="listas__nome">{{ lista.nome }}</span>
+            <span class="progresso">{{ lista.comprados }} de {{ lista.total_de_itens }} comprados</span>
+          </a>
         </li>
       {% endfor %}
     </ul>

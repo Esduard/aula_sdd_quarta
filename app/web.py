@@ -61,6 +61,16 @@ def criar_app(caminho_dos_dados=CAMINHO_PADRAO_DOS_DADOS):
             )
         return redirect(url_for("ver_lista", id_da_lista=id_da_lista))
 
+    @app.post("/listas/<id_da_lista>/itens/<id_do_item>/comprado")
+    def marcar_item_como_comprado(id_da_lista, id_do_item):
+        listas.marcar_como_comprado(id_da_lista, id_do_item)
+        return redirect(url_for("ver_lista", id_da_lista=id_da_lista))
+
+    @app.post("/listas/<id_da_lista>/itens/<id_do_item>/pendente")
+    def voltar_item_para_pendente(id_da_lista, id_do_item):
+        listas.voltar_para_pendente(id_da_lista, id_do_item)
+        return redirect(url_for("ver_lista", id_da_lista=id_da_lista))
+
     @app.errorhandler(ErroNaoEncontrado)
     def nao_encontrado(erro):
         return render_template("nao_encontrado.html", mensagem=str(erro)), 404

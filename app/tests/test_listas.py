@@ -247,3 +247,158 @@ def test_os_itens_sobrevivem_a_reabrir_o_modulo_sobre_o_mesmo_arquivo_de_dados(
         ("Leite", "2 L", False),
         ("Pão", None, False),
     ]
+
+
+def test_marcar_um_item_pendente_como_comprado_o_deixa_comprado(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+
+    listas.marcar_como_comprado(lista.id, leite.id)
+
+    assert [(item.nome, item.comprado) for item in listas.obter(lista.id).itens] == [
+        ("Leite", True)
+    ]
+    assert [item.comprado for item in Listas(caminho).obter(lista.id).itens] == [True]
+
+
+def test_voltar_um_item_comprado_para_pendente_o_deixa_pendente(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite", "2 L")
+    listas.marcar_como_comprado(lista.id, leite.id)
+
+    listas.voltar_para_pendente(lista.id, leite.id)
+
+    itens = listas.obter(lista.id).itens
+    assert [(item.nome, item.quantidade, item.comprado) for item in itens] == [
+        ("Leite", "2 L", False)
+    ]
+    assert [item.comprado for item in Listas(caminho).obter(lista.id).itens] == [False]
+
+
+@pytest.mark.parametrize("operacao", ["marcar_como_comprado", "voltar_para_pendente"])
+def test_mudar_o_estado_de_um_item_inexistente_da_erro_de_nao_encontrado_e_nada_muda(
+    tmp_path, operacao
+):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    pao = listas.adicionar_item(lista.id, "Pão")
+    listas.marcar_como_comprado(lista.id, pao.id)
+    outra = listas.criar("Churrasco de sábado")
+
+    with pytest.raises(ErroNaoEncontrado):
+        getattr(listas, operacao)(lista.id, "identificador-que-nao-existe")
+    with pytest.raises(ErroNaoEncontrado):
+        getattr(listas, operacao)("identificador-que-nao-existe", leite.id)
+    # O Item existe, mas pertence a outra Lista.
+    with pytest.raises(ErroNaoEncontrado):
+        getattr(listas, operacao)(outra.id, leite.id)
+
+    assert [(item.nome, item.comprado) for item in listas.obter(lista.id).itens] == [
+        ("Leite", False),
+        ("Pão", True),
+    ]
+
+
+def test_a_consulta_da_lista_devolve_os_pendentes_primeiro_e_os_comprados_depois_cada_grupo_na_ordem_de_adicao(
+    tmp_path,
+):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    listas.adicionar_item(lista.id, "Arroz")
+    feijao = listas.adicionar_item(lista.id, "Feijão")
+    listas.adicionar_item(lista.id, "Pão")
+    ovos = listas.adicionar_item(lista.id, "Ovos")
+    # Marcados fora da ordem de adição: o que vale é a ordem de adição.
+    listas.marcar_como_comprado(lista.id, ovos.id)
+    listas.marcar_como_comprado(lista.id, leite.id)
+    listas.marcar_como_comprado(lista.id, feijao.id)
+
+    esperado = [
+        ("Arroz", False),
+        ("Pão", False),
+        ("Leite", True),
+        ("Feijão", True),
+        ("Ovos", True),
+    ]
+    assert [
+        (item.nome, item.comprado) for item in listas.obter(lista.id).itens
+    ] == esperado
+    assert [
+        (item.nome, item.comprado) for item in Listas(caminho).obter(lista.id).itens
+    ] == esperado
+
+
+def test_um_item_devolvido_a_pendente_volta_ao_seu_lugar_na_ordem_de_adicao(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    listas.adicionar_item(lista.id, "Arroz")
+    listas.marcar_como_comprado(lista.id, leite.id)
+
+    listas.voltar_para_pendente(lista.id, leite.id)
+
+    assert [(item.nome, item.comprado) for item in listas.obter(lista.id).itens] == [
+        ("Leite", False),
+        ("Arroz", False),
+    ]
+
+
+def test_a_consulta_da_lista_devolve_o_progresso_quantos_comprados_do_total_de_itens(
+    tmp_path,
+):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    arroz = listas.adicionar_item(lista.id, "Arroz")
+    listas.adicionar_item(lista.id, "Feijão")
+
+    consultada = listas.obter(lista.id)
+    assert (consultada.comprados, consultada.total_de_itens) == (0, 3)
+
+    listas.marcar_como_comprado(lista.id, leite.id)
+    listas.marcar_como_comprado(lista.id, arroz.id)
+    consultada = listas.obter(lista.id)
+    assert (consultada.comprados, consultada.total_de_itens) == (2, 3)
+
+    listas.voltar_para_pendente(lista.id, leite.id)
+    consultada = Listas(caminho).obter(lista.id)
+    assert (consultada.comprados, consultada.total_de_itens) == (1, 3)
+
+
+def test_uma_lista_sem_itens_tem_progresso_zero_de_zero(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+
+    criada = listas.criar("Mercado da semana")
+
+    assert (criada.comprados, criada.total_de_itens) == (0, 0)
+    consultada = listas.obter(criada.id)
+    assert (consultada.comprados, consultada.total_de_itens) == (0, 0)
+
+
+def test_a_consulta_de_todas_as_listas_devolve_o_progresso_de_cada_uma(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    mercado = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(mercado.id, "Leite")
+    listas.adicionar_item(mercado.id, "Arroz")
+    listas.adicionar_item(mercado.id, "Feijão")
+    listas.marcar_como_comprado(mercado.id, leite.id)
+    churrasco = listas.criar("Churrasco de sábado")
+    carvao = listas.adicionar_item(churrasco.id, "Carvão")
+    listas.marcar_como_comprado(churrasco.id, carvao.id)
+    listas.criar("Feira de domingo")
+
+    assert [
+        (lista.nome, lista.comprados, lista.total_de_itens) for lista in listas.todas()
+    ] == [
+        ("Feira de domingo", 0, 0),
+        ("Churrasco de sábado", 1, 1),
+        ("Mercado da semana", 1, 3),
+    ]
