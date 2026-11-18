@@ -62,7 +62,7 @@ Além do papel:
 
 O Copilot procura skills de projeto em **`.github/skills/<nome-da-skill>/SKILL.md`**. Cada skill é uma pasta; o nome da pasta vira o comando `/nome` no chat.
 
-Vamos instalar **só as 8 skills** que este fluxo usa. As 4 etapas chamam outras skills por baixo: o `grill-me` usa o `grilling`, e o `implement` usa o `tdd` e o `code-review`. O `setup-matt-pocock-skills` configura o repositório.
+Vamos instalar **só as 10 skills** que este fluxo usa. As 4 etapas chamam outras skills por baixo: o `grill-me` usa o `grilling`, e o `implement` usa o `tdd` e o `code-review`. O `grill-with-docs` é uma variante do `grill-me` que também documenta as decisões enquanto entrevista; ele usa o `grilling` e o `domain-modeling`. O `setup-matt-pocock-skills` configura o repositório.
 
 Cole no **terminal do Codespace** (`` Ctrl+` ``):
 
@@ -71,6 +71,7 @@ git clone -q https://github.com/mattpocock/skills /tmp/mp-skills
 git -C /tmp/mp-skills checkout -q 5863806dd4e15c63174bee4e7515a4256792ecfa
 mkdir -p .github/skills
 for s in productivity/grill-me productivity/grilling \
+         engineering/grill-with-docs engineering/domain-modeling \
          engineering/setup-matt-pocock-skills engineering/to-spec engineering/to-tickets \
          engineering/implement engineering/tdd engineering/code-review; do
   cp -r "/tmp/mp-skills/skills/$s" .github/skills/
@@ -78,10 +79,10 @@ done
 ls .github/skills
 ```
 
-Saída esperada (8 pastas):
+Saída esperada (10 pastas):
 
 ```
-code-review  grill-me  grilling  implement  setup-matt-pocock-skills  tdd  to-spec  to-tickets
+code-review  domain-modeling  grill-me  grill-with-docs  grilling  implement  setup-matt-pocock-skills  tdd  to-spec  to-tickets
 ```
 
 > 💡 Se `/grill-me` não aparecer quando você digitar `/` no chat: `Ctrl+Shift+P` → **Developer: Reload Window**.
@@ -111,7 +112,7 @@ git add -A && git commit -m "Setup das skills"
 
 > 💡 O commit é só local. Não é preciso `git push`: todo o trabalho da aula fica no Codespace.
 
-✅ **Checklist do setup:** Codespace aberto ✔ · Agent mode + Claude ✔ · 8 skills em `.github/skills` ✔ · `/setup-matt-pocock-skills` com issues locais ✔ · commit ✔
+✅ **Checklist do setup:** Codespace aberto ✔ · Agent mode + Claude ✔ · 10 skills em `.github/skills` ✔ · `/setup-matt-pocock-skills` com issues locais ✔ · commit ✔
 
 ---
 
@@ -137,6 +138,8 @@ Temos cerca de 20 minutos de grilling. Priorize as decisões de maior impacto no
 - Discutam antes de responder. "Sim" aceita a recomendação do agente.
 - Pode responder várias perguntas de uma vez: `Q1 sim, Q2 não — queremos X, Q3 sim`.
 - Não sabem responder? Peçam: `explique as opções da Q3 com um exemplo`.
+
+> 💡 **Variante com documentação — `/grill-with-docs`:** troquem `/grill-me` por `/grill-with-docs` no prompt acima, mantendo o resto igual. A entrevista é a mesma, mas o agente vai registrando os termos do domínio em `GLOSSARY.md` e as decisões difíceis de reverter em `docs/adr/` conforme vocês respondem.
 
 ⏰ **Às 14:00**, mesmo que o agente ainda tenha perguntas, digite o comando abaixo e NÃO FECHE A SESSÃO E NÃO USE O COMANDO /clear!!
 
