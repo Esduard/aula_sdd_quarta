@@ -94,6 +94,46 @@ class Listas:
         self._gravar(dados)
         return _para_item(registro)
 
+    def obter_item(self, id_da_lista, id_do_item):
+        """Devolve o Item com o identificador dado, da Lista dada.
+
+        Se a Lista não existir, ou o Item não existir nela, levanta
+        ``ErroNaoEncontrado``.
+        """
+        return _para_item(_achar_item(_achar_lista(self._ler(), id_da_lista), id_do_item))
+
+    def editar_item(self, id_da_lista, id_do_item, nome, quantidade=None):
+        """Troca o nome e a Quantidade do Item, grava e o devolve.
+
+        Valem as regras da adição: os espaços das pontas do nome e da
+        Quantidade são removidos, e a Quantidade vazia ou só com espaços conta
+        como ausente. O estado do Item (pendente ou comprado) não muda.
+        Se não sobrar nada do nome, levanta ``ErroDeValidacao`` e nada é
+        gravado. Se a Lista não existir, ou o Item não existir nela, levanta
+        ``ErroNaoEncontrado`` e nada é gravado.
+        """
+        nome = nome.strip()
+        if not nome:
+            raise ErroDeValidacao("Informe um nome para o Item.")
+        dados = self._ler()
+        registro = _achar_item(_achar_lista(dados, id_da_lista), id_do_item)
+        registro["nome"] = nome
+        registro["quantidade"] = (quantidade or "").strip() or None
+        self._gravar(dados)
+        return _para_item(registro)
+
+    def remover_item(self, id_da_lista, id_do_item):
+        """Tira o Item da Lista e grava. Não devolve nada.
+
+        Se a Lista não existir, ou o Item não existir nela, levanta
+        ``ErroNaoEncontrado`` e nada é gravado.
+        """
+        dados = self._ler()
+        registro_da_lista = _achar_lista(dados, id_da_lista)
+        registro = _achar_item(registro_da_lista, id_do_item)
+        registro_da_lista["itens"].remove(registro)
+        self._gravar(dados)
+
     def marcar_como_comprado(self, id_da_lista, id_do_item):
         """Marca o Item como comprado, grava e o devolve.
 

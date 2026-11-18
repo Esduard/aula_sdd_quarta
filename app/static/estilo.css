@@ -236,6 +236,35 @@ h1 + .progresso {
   overflow-wrap: anywhere;
 }
 
+/* Cada linha tem o botão do Item, que fica com toda a largura que sobra, e
+   ao lado o caminho para editar, com a área de toque mínima. */
+.itens__linha {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.itens__linha form {
+  flex: 1;
+  min-width: 0;
+}
+
+.itens__editar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--toque);
+  min-height: var(--toque);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 /* Item comprado: riscado e esmaecido */
 .itens__item--comprado {
   opacity: 0.55;
@@ -251,7 +280,8 @@ h1 + .progresso {
   color: var(--cor-texto-suave);
 }
 
-/* Ações da Lista (desmarcar todos): botão secundário, de largura total */
+/* Ações da Lista (desmarcar todos) e do Item (remover): botão secundário, de
+   largura total */
 
 .acoes {
   margin-top: 1.5rem;
@@ -262,6 +292,10 @@ h1 + .progresso {
   border: 1px solid var(--cor-borda);
   background: var(--cor-superficie);
   color: var(--cor-texto);
+}
+
+.botao-secundario--perigo {
+  color: var(--cor-erro);
 }
 
 /* Estado vazio */

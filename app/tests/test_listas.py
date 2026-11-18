@@ -486,3 +486,197 @@ def test_desmarcar_todos_em_lista_sem_itens_a_deixa_vazia(tmp_path):
     devolvida = listas.desmarcar_todos(lista.id)
 
     assert (devolvida.itens, devolvida.comprados, devolvida.total_de_itens) == ((), 0, 0)
+
+
+def test_editar_um_item_troca_seu_nome_e_sua_quantidade(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite", "2 L")
+    listas.adicionar_item(lista.id, "Pão")
+
+    editado = listas.editar_item(lista.id, leite.id, "Leite integral", "3 caixas")
+
+    assert (editado.id, editado.nome, editado.quantidade) == (
+        leite.id,
+        "Leite integral",
+        "3 caixas",
+    )
+    esperado = [(leite.id, "Leite integral", "3 caixas"), ("Pão", None)]
+    for itens in (listas.obter(lista.id).itens, Listas(caminho).obter(lista.id).itens):
+        assert (itens[0].id, itens[0].nome, itens[0].quantidade) == esperado[0]
+        assert (itens[1].nome, itens[1].quantidade) == esperado[1]
+
+
+def test_editar_um_item_preserva_seu_estado_pendente_ou_comprado(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    pao = listas.adicionar_item(lista.id, "Pão")
+    listas.marcar_como_comprado(lista.id, pao.id)
+
+    pendente_editado = listas.editar_item(lista.id, leite.id, "Leite integral", "2 L")
+    comprado_editado = listas.editar_item(lista.id, pao.id, "Pão francês", "6")
+
+    assert (pendente_editado.comprado, comprado_editado.comprado) == (False, True)
+    consultada = Listas(caminho).obter(lista.id)
+    assert [(item.nome, item.comprado) for item in consultada.itens] == [
+        ("Leite integral", False),
+        ("Pão francês", True),
+    ]
+    assert (consultada.comprados, consultada.total_de_itens) == (1, 2)
+
+
+def test_na_edicao_os_espacos_das_pontas_do_nome_e_da_quantidade_sao_removidos(
+    tmp_path,
+):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado da semana")
+    ovos = listas.adicionar_item(lista.id, "Ovo")
+
+    editado = listas.editar_item(lista.id, ovos.id, "  Ovos \t", "  1 dúzia ")
+
+    assert (editado.nome, editado.quantidade) == ("Ovos", "1 dúzia")
+    itens = listas.obter(lista.id).itens
+    assert [(item.nome, item.quantidade) for item in itens] == [("Ovos", "1 dúzia")]
+
+
+@pytest.mark.parametrize("quantidade_em_branco", [None, "", "   ", " \t\n "])
+def test_na_edicao_quantidade_em_branco_conta_como_ausente(
+    tmp_path, quantidade_em_branco
+):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite", "2 L")
+
+    editado = listas.editar_item(lista.id, leite.id, "Leite", quantidade_em_branco)
+
+    assert editado.quantidade is None
+    assert [item.quantidade for item in listas.obter(lista.id).itens] == [None]
+
+
+@pytest.mark.parametrize("nome_em_branco", ["", "   ", " \t\n "])
+def test_editar_um_item_com_nome_vazio_ou_so_com_espacos_e_rejeitado_com_erro_de_validacao_e_nada_e_gravado(
+    tmp_path, nome_em_branco
+):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite", "2 L")
+
+    with pytest.raises(ErroDeValidacao) as excecao:
+        listas.editar_item(lista.id, leite.id, nome_em_branco, "3 L")
+
+    assert str(excecao.value) == "Informe um nome para o Item."
+    for itens in (listas.obter(lista.id).itens, Listas(caminho).obter(lista.id).itens):
+        assert [(item.nome, item.quantidade) for item in itens] == [("Leite", "2 L")]
+
+
+def test_editar_um_item_inexistente_da_erro_de_nao_encontrado_e_nada_muda(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite", "2 L")
+    outra = listas.criar("Churrasco de sábado")
+
+    with pytest.raises(ErroNaoEncontrado):
+        listas.editar_item(lista.id, "identificador-que-nao-existe", "Arroz", "1 kg")
+    with pytest.raises(ErroNaoEncontrado):
+        listas.editar_item("identificador-que-nao-existe", leite.id, "Arroz", "1 kg")
+    # O Item existe, mas pertence a outra Lista.
+    with pytest.raises(ErroNaoEncontrado):
+        listas.editar_item(outra.id, leite.id, "Arroz", "1 kg")
+
+    itens = Listas(caminho).obter(lista.id).itens
+    assert [(item.nome, item.quantidade) for item in itens] == [("Leite", "2 L")]
+    assert list(listas.obter(outra.id).itens) == []
+
+
+def test_remover_um_item_o_tira_da_lista_e_os_demais_continuam(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    listas.adicionar_item(lista.id, "Leite", "2 L")
+    arroz = listas.adicionar_item(lista.id, "Arroz")
+    feijao = listas.adicionar_item(lista.id, "Feijão")
+    listas.marcar_como_comprado(lista.id, feijao.id)
+
+    listas.remover_item(lista.id, arroz.id)
+
+    esperado = [("Leite", "2 L", False), ("Feijão", None, True)]
+    for consultada in (listas.obter(lista.id), Listas(caminho).obter(lista.id)):
+        assert [
+            (item.nome, item.quantidade, item.comprado) for item in consultada.itens
+        ] == esperado
+        assert (consultada.comprados, consultada.total_de_itens) == (1, 2)
+
+
+def test_remover_um_item_inexistente_da_erro_de_nao_encontrado_e_nada_e_removido(
+    tmp_path,
+):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    outra = listas.criar("Churrasco de sábado")
+    listas.adicionar_item(outra.id, "Carvão")
+    vazia = listas.criar("Feira de domingo")
+
+    with pytest.raises(ErroNaoEncontrado):
+        listas.remover_item(lista.id, "identificador-que-nao-existe")
+    with pytest.raises(ErroNaoEncontrado):
+        listas.remover_item("identificador-que-nao-existe", leite.id)
+    # O Item existe, mas pertence a outra Lista.
+    with pytest.raises(ErroNaoEncontrado):
+        listas.remover_item(outra.id, leite.id)
+    with pytest.raises(ErroNaoEncontrado):
+        listas.remover_item(vazia.id, leite.id)
+
+    reaberto = Listas(caminho)
+    assert [item.nome for item in reaberto.obter(lista.id).itens] == ["Leite"]
+    assert [item.nome for item in reaberto.obter(outra.id).itens] == ["Carvão"]
+
+
+def test_remover_um_item_ja_removido_da_erro_de_nao_encontrado(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    listas.remover_item(lista.id, leite.id)
+
+    with pytest.raises(ErroNaoEncontrado):
+        listas.remover_item(lista.id, leite.id)
+    with pytest.raises(ErroNaoEncontrado):
+        listas.editar_item(lista.id, leite.id, "Leite", "2 L")
+
+
+def test_obter_um_item_devolve_seu_nome_sua_quantidade_e_seu_estado(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado da semana")
+    listas.adicionar_item(lista.id, "Leite")
+    pao = listas.adicionar_item(lista.id, "Pão", "6")
+    listas.marcar_como_comprado(lista.id, pao.id)
+
+    item = listas.obter_item(lista.id, pao.id)
+
+    assert (item.id, item.nome, item.quantidade, item.comprado) == (
+        pao.id,
+        "Pão",
+        "6",
+        True,
+    )
+
+
+def test_obter_um_item_inexistente_da_erro_de_nao_encontrado(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    outra = listas.criar("Churrasco de sábado")
+
+    with pytest.raises(ErroNaoEncontrado):
+        listas.obter_item(lista.id, "identificador-que-nao-existe")
+    with pytest.raises(ErroNaoEncontrado):
+        listas.obter_item("identificador-que-nao-existe", leite.id)
+    # O Item existe, mas pertence a outra Lista.
+    with pytest.raises(ErroNaoEncontrado):
+        listas.obter_item(outra.id, leite.id)

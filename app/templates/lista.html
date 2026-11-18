@@ -28,7 +28,7 @@
   {% if lista.itens %}
     <ul class="itens">
       {% for item in lista.itens %}
-        <li>
+        <li class="itens__linha">
           {# Tocar no Item alterna o estado: um formulário POST por Item, sem JavaScript. #}
           {% if item.comprado %}
             <form method="post"
@@ -47,6 +47,10 @@
                 {% endif %}
               </button>
             </form>
+          {# Caminho para editar o Item, ao lado da área de toque; remover fica na tela de edição. #}
+          <a class="itens__editar"
+             href="{{ url_for('formulario_de_editar_item', id_da_lista=lista.id, id_do_item=item.id) }}"
+             aria-label="Editar {{ item.nome }}">Editar</a>
         </li>
       {% endfor %}
     </ul>

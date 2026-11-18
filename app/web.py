@@ -71,6 +71,42 @@ def criar_app(caminho_dos_dados=CAMINHO_PADRAO_DOS_DADOS):
         listas.voltar_para_pendente(id_da_lista, id_do_item)
         return redirect(url_for("ver_lista", id_da_lista=id_da_lista))
 
+    @app.get("/listas/<id_da_lista>/itens/<id_do_item>/editar")
+    def formulario_de_editar_item(id_da_lista, id_do_item):
+        item = listas.obter_item(id_da_lista, id_do_item)
+        return render_template(
+            "editar_item.html",
+            lista=listas.obter(id_da_lista),
+            item=item,
+            nome=item.nome,
+            quantidade=item.quantidade or "",
+        )
+
+    @app.post("/listas/<id_da_lista>/itens/<id_do_item>/editar")
+    def editar_item(id_da_lista, id_do_item):
+        nome = request.form.get("nome", "")
+        quantidade = request.form.get("quantidade", "")
+        try:
+            listas.editar_item(id_da_lista, id_do_item, nome, quantidade)
+        except ErroDeValidacao as erro:
+            return (
+                render_template(
+                    "editar_item.html",
+                    lista=listas.obter(id_da_lista),
+                    item=listas.obter_item(id_da_lista, id_do_item),
+                    erro=str(erro),
+                    nome=nome,
+                    quantidade=quantidade,
+                ),
+                400,
+            )
+        return redirect(url_for("ver_lista", id_da_lista=id_da_lista))
+
+    @app.post("/listas/<id_da_lista>/itens/<id_do_item>/remover")
+    def remover_item(id_da_lista, id_do_item):
+        listas.remover_item(id_da_lista, id_do_item)
+        return redirect(url_for("ver_lista", id_da_lista=id_da_lista))
+
     @app.post("/listas/<id_da_lista>/desmarcar-todos")
     def desmarcar_todos(id_da_lista):
         listas.desmarcar_todos(id_da_lista)
