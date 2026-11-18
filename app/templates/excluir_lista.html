@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block titulo %}Excluir {{ lista.nome }} · Lista de Compras{% endblock %}
+
+{% block conteudo %}
+  <a class="voltar" href="{{ url_for('ver_lista', id_da_lista=lista.id) }}">&larr; {{ lista.nome }}</a>
+
+  <h1>Excluir Lista</h1>
+
+  {# Confirmação: nada é excluído ao abrir esta tela. Só o POST abaixo exclui. #}
+  <p>Excluir a Lista <strong>{{ lista.nome }}</strong>?</p>
+  {% if lista.total_de_itens == 1 %}
+    <p>O único Item desta Lista será excluído junto. Não dá para desfazer.</p>
+  {% elif lista.total_de_itens %}
+    <p>Os {{ lista.total_de_itens }} Itens desta Lista serão excluídos junto. Não dá para desfazer.</p>
+  {% else %}
+    <p>Esta Lista não tem Itens. Não dá para desfazer.</p>
+  {% endif %}
+
+  {# Exclusão: formulário POST seguido de redirecionamento, sem JavaScript. #}
+  <form class="acoes" method="post"
+        action="{{ url_for('excluir_lista', id_da_lista=lista.id) }}">
+    <button type="submit" class="botao-secundario botao-secundario--perigo">Excluir Lista</button>
+  </form>
+
+  {# Desistir: um link de volta para a Lista, que não altera nada. #}
+  <div class="acoes">
+    <a class="botao botao-secundario"
+       href="{{ url_for('ver_lista', id_da_lista=lista.id) }}">Cancelar</a>
+  </div>
+{% endblock %}

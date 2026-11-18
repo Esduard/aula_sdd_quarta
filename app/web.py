@@ -42,6 +42,38 @@ def criar_app(caminho_dos_dados=CAMINHO_PADRAO_DOS_DADOS):
     def ver_lista(id_da_lista):
         return render_template("lista.html", lista=listas.obter(id_da_lista))
 
+    @app.get("/listas/<id_da_lista>/renomear")
+    def formulario_de_renomear_lista(id_da_lista):
+        lista = listas.obter(id_da_lista)
+        return render_template("renomear_lista.html", lista=lista, nome=lista.nome)
+
+    @app.post("/listas/<id_da_lista>/renomear")
+    def renomear_lista(id_da_lista):
+        nome = request.form.get("nome", "")
+        try:
+            listas.renomear(id_da_lista, nome)
+        except ErroDeValidacao as erro:
+            return (
+                render_template(
+                    "renomear_lista.html",
+                    lista=listas.obter(id_da_lista),
+                    erro=str(erro),
+                    nome=nome,
+                ),
+                400,
+            )
+        return redirect(url_for("ver_lista", id_da_lista=id_da_lista))
+
+    @app.get("/listas/<id_da_lista>/excluir")
+    def confirmar_exclusao_da_lista(id_da_lista):
+        # Tela de confirmação: só mostra a Lista; quem exclui é o POST.
+        return render_template("excluir_lista.html", lista=listas.obter(id_da_lista))
+
+    @app.post("/listas/<id_da_lista>/excluir")
+    def excluir_lista(id_da_lista):
+        listas.excluir(id_da_lista)
+        return redirect(url_for("inicio"))
+
     @app.post("/listas/<id_da_lista>/itens")
     def adicionar_item(id_da_lista):
         nome = request.form.get("nome", "")

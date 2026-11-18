@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block titulo %}Renomear {{ lista.nome }} · Lista de Compras{% endblock %}
+
+{% block conteudo %}
+  <a class="voltar" href="{{ url_for('ver_lista', id_da_lista=lista.id) }}">&larr; {{ lista.nome }}</a>
+
+  <h1>Renomear Lista</h1>
+
+  {# Renomeação: formulário POST seguido de redirecionamento, sem JavaScript. #}
+  <form class="formulario" method="post"
+        action="{{ url_for('renomear_lista', id_da_lista=lista.id) }}">
+    <label class="formulario__rotulo" for="nome">Nome da Lista</label>
+    {% if erro %}
+      <p class="erro" id="erro-nome" role="alert">{{ erro }}</p>
+    {% endif %}
+    <div class="formulario__linha">
+      <input type="text" id="nome" name="nome" value="{{ nome }}"
+             autocomplete="off"{% if erro %} aria-invalid="true" aria-describedby="erro-nome"{% endif %}>
+      <button type="submit">Salvar</button>
+    </div>
+  </form>
+{% endblock %}

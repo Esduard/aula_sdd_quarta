@@ -298,6 +298,14 @@ h1 + .progresso {
   color: var(--cor-erro);
 }
 
+/* Ações que levam a outra tela (renomear e excluir a Lista): uma embaixo da
+   outra, cada uma com a largura toda */
+.acoes--empilhadas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 /* Estado vazio */
 
 .vazio {

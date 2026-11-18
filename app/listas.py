@@ -70,6 +70,33 @@ class Listas:
         """
         return _para_lista(_achar_lista(self._ler(), id_da_lista))
 
+    def renomear(self, id_da_lista, nome):
+        """Troca o nome da Lista, grava e a devolve.
+
+        O identificador e os Itens da Lista não mudam. Os espaços das pontas
+        do nome são removidos. Se não sobrar nada, levanta ``ErroDeValidacao``
+        e nada é gravado. Se a Lista não existir, levanta
+        ``ErroNaoEncontrado`` e nada é gravado.
+        """
+        nome = nome.strip()
+        if not nome:
+            raise ErroDeValidacao("Informe um nome para a Lista.")
+        dados = self._ler()
+        registro = _achar_lista(dados, id_da_lista)
+        registro["nome"] = nome
+        self._gravar(dados)
+        return _para_lista(registro)
+
+    def excluir(self, id_da_lista):
+        """Exclui a Lista com todos os seus Itens e grava. Não devolve nada.
+
+        As outras Listas e seus Itens não são afetados. Se a Lista não
+        existir, levanta ``ErroNaoEncontrado`` e nada é gravado.
+        """
+        dados = self._ler()
+        dados["listas"].remove(_achar_lista(dados, id_da_lista))
+        self._gravar(dados)
+
     def adicionar_item(self, id_da_lista, nome, quantidade=None):
         """Adiciona um Item pendente ao fim da Lista, grava e o devolve.
 

@@ -66,4 +66,12 @@
       <p>Use o formulário acima para adicionar o primeiro Item.</p>
     </section>
   {% endif %}
+
+  {# Renomear e excluir a Lista: cada um leva a uma tela própria; excluir pede confirmação. #}
+  <nav class="acoes acoes--empilhadas" aria-label="Ações da Lista">
+    <a class="botao botao-secundario"
+       href="{{ url_for('formulario_de_renomear_lista', id_da_lista=lista.id) }}">Renomear Lista</a>
+    <a class="botao botao-secundario botao-secundario--perigo"
+       href="{{ url_for('confirmar_exclusao_da_lista', id_da_lista=lista.id) }}">Excluir Lista</a>
+  </nav>
 {% endblock %}

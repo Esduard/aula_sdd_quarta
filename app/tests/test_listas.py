@@ -680,3 +680,143 @@ def test_obter_um_item_inexistente_da_erro_de_nao_encontrado(tmp_path):
     # O Item existe, mas pertence a outra Lista.
     with pytest.raises(ErroNaoEncontrado):
         listas.obter_item(outra.id, leite.id)
+
+
+def test_renomear_uma_lista_troca_seu_nome_e_preserva_identificador_e_itens(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semna")
+    leite = listas.adicionar_item(lista.id, "Leite", "2 L")
+    listas.marcar_como_comprado(lista.id, leite.id)
+
+    renomeada = listas.renomear(lista.id, "Mercado da semana")
+
+    assert renomeada.id == lista.id
+    assert renomeada.nome == "Mercado da semana"
+    reaberta = Listas(caminho).obter(lista.id)
+    assert reaberta.nome == "Mercado da semana"
+    assert [(item.nome, item.quantidade, item.comprado) for item in reaberta.itens] == [
+        ("Leite", "2 L", True)
+    ]
+    assert [outra.nome for outra in listas.todas()] == ["Mercado da semana"]
+
+
+def test_na_renomeacao_os_espacos_das_pontas_do_nome_da_lista_sao_removidos(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado")
+
+    renomeada = listas.renomear(lista.id, "  Churrasco de sábado \n")
+
+    assert renomeada.nome == "Churrasco de sábado"
+    assert listas.obter(lista.id).nome == "Churrasco de sábado"
+
+
+@pytest.mark.parametrize("nome_em_branco", ["", "   ", " \t\n "])
+def test_renomear_uma_lista_com_nome_vazio_ou_so_com_espacos_e_rejeitado_com_erro_de_validacao_e_nada_e_gravado(
+    tmp_path, nome_em_branco
+):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado")
+
+    with pytest.raises(ErroDeValidacao) as erro:
+        listas.renomear(lista.id, nome_em_branco)
+
+    assert str(erro.value) == "Informe um nome para a Lista."
+    assert Listas(caminho).obter(lista.id).nome == "Mercado"
+
+
+def test_renomear_uma_lista_inexistente_da_erro_de_nao_encontrado_e_nada_muda(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    listas.criar("Mercado")
+
+    with pytest.raises(ErroNaoEncontrado):
+        listas.renomear("identificador-que-nao-existe", "Churrasco")
+
+    assert [lista.nome for lista in listas.todas()] == ["Mercado"]
+
+
+def test_excluir_uma_lista_a_tira_de_todas_as_listas(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado")
+
+    listas.excluir(lista.id)
+
+    assert listas.todas() == []
+    assert Listas(caminho).todas() == []
+
+
+def test_excluir_uma_lista_inexistente_da_erro_de_nao_encontrado_e_nada_e_excluido(
+    tmp_path,
+):
+    listas = Listas(tmp_path / "dados.json")
+    listas.criar("Mercado")
+
+    with pytest.raises(ErroNaoEncontrado):
+        listas.excluir("identificador-que-nao-existe")
+
+    assert [lista.nome for lista in listas.todas()] == ["Mercado"]
+
+
+def test_excluir_uma_lista_exclui_junto_todos_os_seus_itens(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado")
+    leite = listas.adicionar_item(lista.id, "Leite", "2 L")
+    ovos = listas.adicionar_item(lista.id, "Ovos")
+    listas.marcar_como_comprado(lista.id, ovos.id)
+
+    listas.excluir(lista.id)
+
+    reaberto = Listas(caminho)
+    with pytest.raises(ErroNaoEncontrado):
+        reaberto.obter(lista.id)
+    for item in (leite, ovos):
+        with pytest.raises(ErroNaoEncontrado):
+            reaberto.obter_item(lista.id, item.id)
+
+
+def test_excluir_uma_lista_nao_afeta_as_outras_listas_nem_seus_itens(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    mercado = listas.criar("Mercado")
+    listas.adicionar_item(mercado.id, "Leite", "2 L")
+    churrasco = listas.criar("Churrasco")
+    carvao = listas.adicionar_item(churrasco.id, "Carvão", "1 saco")
+    listas.adicionar_item(churrasco.id, "Picanha")
+    listas.marcar_como_comprado(churrasco.id, carvao.id)
+    feira = listas.criar("Feira")
+
+    listas.excluir(mercado.id)
+
+    reaberto = Listas(caminho)
+    assert [lista.id for lista in reaberto.todas()] == [feira.id, churrasco.id]
+    restante = reaberto.obter(churrasco.id)
+    assert restante.nome == "Churrasco"
+    assert [(item.nome, item.quantidade, item.comprado) for item in restante.itens] == [
+        ("Picanha", None, False),
+        ("Carvão", "1 saco", True),
+    ]
+    assert (restante.total_de_itens, restante.comprados) == (2, 1)
+
+
+def test_excluir_uma_lista_ja_excluida_da_erro_de_nao_encontrado(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado")
+    listas.excluir(lista.id)
+
+    with pytest.raises(ErroNaoEncontrado):
+        listas.excluir(lista.id)
+
+
+def test_renomear_uma_lista_nao_afeta_as_outras_listas(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    mercado = listas.criar("Mercado")
+    churrasco = listas.criar("Churrasco")
+    listas.adicionar_item(churrasco.id, "Carvão")
+
+    listas.renomear(mercado.id, "Feira")
+
+    assert [lista.nome for lista in listas.todas()] == ["Churrasco", "Feira"]
+    assert [item.nome for item in listas.obter(churrasco.id).itens] == ["Carvão"]
