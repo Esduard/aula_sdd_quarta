@@ -3,7 +3,25 @@
 {% block conteudo %}
   <h1>Suas Listas</h1>
 
-  {% if not listas %}
+  <form class="formulario" method="post" action="{{ url_for('criar_lista') }}">
+    <label class="formulario__rotulo" for="nome">Nome da nova Lista</label>
+    {% if erro %}
+      <p class="erro" id="erro-nome" role="alert">{{ erro }}</p>
+    {% endif %}
+    <div class="formulario__linha">
+      <input type="text" id="nome" name="nome" value="{{ nome|default('') }}"
+             autocomplete="off"{% if erro %} aria-invalid="true" aria-describedby="erro-nome"{% endif %}>
+      <button type="submit">Criar Lista</button>
+    </div>
+  </form>
+
+  {% if listas %}
+    <ul class="listas">
+      {% for lista in listas %}
+        <li class="listas__lista">{{ lista.nome }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
     <section class="vazio">
       <p class="vazio__titulo">Ainda não há nenhuma Lista.</p>
       <p>Crie a primeira Lista para começar a organizar suas compras.</p>

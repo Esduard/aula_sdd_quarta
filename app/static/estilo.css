@@ -114,6 +114,57 @@ button,
   outline-offset: 2px;
 }
 
+/* Formulários */
+
+.formulario {
+  margin-bottom: var(--espaco);
+}
+
+.formulario__rotulo {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.formulario__linha {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.formulario__linha input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.formulario__linha button {
+  flex-shrink: 0;
+}
+
+.erro {
+  color: var(--cor-erro);
+  font-weight: 600;
+}
+
+/* Listas da tela inicial */
+
+.listas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.listas__lista {
+  display: flex;
+  align-items: center;
+  min-height: var(--toque);
+  margin-bottom: 0.5rem;
+  padding: 0.5rem var(--espaco);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  overflow-wrap: anywhere;
+}
+
 /* Estado vazio */
 
 .vazio {
