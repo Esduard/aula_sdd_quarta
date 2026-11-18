@@ -110,6 +110,19 @@ class Listas:
         """
         return self._mudar_estado(id_da_lista, id_do_item, comprado=False)
 
+    def desmarcar_todos(self, id_da_lista):
+        """Devolve todos os Itens da Lista ao estado pendente, grava e a devolve.
+
+        Nenhum Item é removido, e nomes e Quantidades não mudam. Se a Lista
+        não existir, levanta ``ErroNaoEncontrado`` e nada é gravado.
+        """
+        dados = self._ler()
+        registro_da_lista = _achar_lista(dados, id_da_lista)
+        for registro in registro_da_lista.get("itens", []):
+            registro["comprado"] = False
+        self._gravar(dados)
+        return _para_lista(registro_da_lista)
+
     def _mudar_estado(self, id_da_lista, id_do_item, comprado):
         dados = self._ler()
         registro = _achar_item(_achar_lista(dados, id_da_lista), id_do_item)

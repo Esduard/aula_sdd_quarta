@@ -251,6 +251,19 @@ h1 + .progresso {
   color: var(--cor-texto-suave);
 }
 
+/* Ações da Lista (desmarcar todos): botão secundário, de largura total */
+
+.acoes {
+  margin-top: 1.5rem;
+}
+
+.botao-secundario {
+  width: 100%;
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+
 /* Estado vazio */
 
 .vazio {

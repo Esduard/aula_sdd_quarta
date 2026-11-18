@@ -402,3 +402,87 @@ def test_a_consulta_de_todas_as_listas_devolve_o_progresso_de_cada_uma(tmp_path)
         ("Churrasco de sábado", 1, 1),
         ("Mercado da semana", 1, 3),
     ]
+
+
+def test_desmarcar_todos_devolve_todos_os_itens_ao_estado_pendente_e_zera_o_progresso(
+    tmp_path,
+):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite")
+    listas.adicionar_item(lista.id, "Arroz")
+    feijao = listas.adicionar_item(lista.id, "Feijão")
+    listas.marcar_como_comprado(lista.id, leite.id)
+    listas.marcar_como_comprado(lista.id, feijao.id)
+
+    devolvida = listas.desmarcar_todos(lista.id)
+
+    assert (devolvida.comprados, devolvida.total_de_itens) == (0, 3)
+    consultada = Listas(caminho).obter(lista.id)
+    assert [item.comprado for item in consultada.itens] == [False, False, False]
+    assert (consultada.comprados, consultada.total_de_itens) == (0, 3)
+
+
+def test_desmarcar_todos_nao_remove_itens_nem_altera_nomes_e_quantidades(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    lista = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(lista.id, "Leite", "2 L")
+    arroz = listas.adicionar_item(lista.id, "Arroz")
+    ovos = listas.adicionar_item(lista.id, "Ovos", "1 dúzia")
+    listas.marcar_como_comprado(lista.id, leite.id)
+    listas.marcar_como_comprado(lista.id, ovos.id)
+
+    listas.desmarcar_todos(lista.id)
+
+    assert [
+        (item.id, item.nome, item.quantidade)
+        for item in Listas(caminho).obter(lista.id).itens
+    ] == [
+        (leite.id, "Leite", "2 L"),
+        (arroz.id, "Arroz", None),
+        (ovos.id, "Ovos", "1 dúzia"),
+    ]
+
+
+def test_desmarcar_todos_nao_afeta_itens_de_outras_listas(tmp_path):
+    caminho = tmp_path / "dados.json"
+    listas = Listas(caminho)
+    mercado = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(mercado.id, "Leite")
+    listas.marcar_como_comprado(mercado.id, leite.id)
+    churrasco = listas.criar("Churrasco de sábado")
+    carvao = listas.adicionar_item(churrasco.id, "Carvão", "2 sacos")
+    listas.adicionar_item(churrasco.id, "Sal grosso")
+    listas.marcar_como_comprado(churrasco.id, carvao.id)
+
+    listas.desmarcar_todos(mercado.id)
+
+    outra = Listas(caminho).obter(churrasco.id)
+    assert [(item.nome, item.quantidade, item.comprado) for item in outra.itens] == [
+        ("Sal grosso", None, False),
+        ("Carvão", "2 sacos", True),
+    ]
+    assert (outra.comprados, outra.total_de_itens) == (1, 2)
+
+
+def test_desmarcar_todos_em_lista_inexistente_levanta_erro_de_nao_encontrado(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    mercado = listas.criar("Mercado da semana")
+    leite = listas.adicionar_item(mercado.id, "Leite")
+    listas.marcar_como_comprado(mercado.id, leite.id)
+
+    with pytest.raises(ErroNaoEncontrado):
+        listas.desmarcar_todos("id-que-nao-existe")
+
+    assert listas.obter(mercado.id).comprados == 1
+
+
+def test_desmarcar_todos_em_lista_sem_itens_a_deixa_vazia(tmp_path):
+    listas = Listas(tmp_path / "dados.json")
+    lista = listas.criar("Mercado da semana")
+
+    devolvida = listas.desmarcar_todos(lista.id)
+
+    assert (devolvida.itens, devolvida.comprados, devolvida.total_de_itens) == ((), 0, 0)

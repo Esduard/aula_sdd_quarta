@@ -50,6 +50,12 @@
         </li>
       {% endfor %}
     </ul>
+
+    {# Desmarcar todos: formulário POST seguido de redirecionamento, sem JavaScript. #}
+    <form class="acoes" method="post"
+          action="{{ url_for('desmarcar_todos', id_da_lista=lista.id) }}">
+      <button type="submit" class="botao-secundario">Desmarcar todos</button>
+    </form>
   {% else %}
     <section class="vazio">
       <p class="vazio__titulo">Esta Lista ainda não tem Itens.</p>
