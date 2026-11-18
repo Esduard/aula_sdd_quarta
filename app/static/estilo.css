@@ -1,0 +1,150 @@
+/*
+ * Estilo base do app, mobile-first: as regras fora de media query valem para
+ * o celular; telas maiores só ajustam o que precisa, no fim do arquivo.
+ * Sem biblioteca de UI e sem JavaScript.
+ */
+
+:root {
+  --cor-fundo: #f6f5f1;
+  --cor-superficie: #ffffff;
+  --cor-texto: #1f2421;
+  --cor-texto-suave: #5c665f;
+  --cor-borda: #d9d6cc;
+  --cor-destaque: #1f7a3a;
+  --cor-destaque-texto: #ffffff;
+  --cor-erro: #a3261d;
+
+  --espaco: 1rem;
+  --raio: 0.75rem;
+  /* Altura mínima das áreas de toque, para uso com uma mão só. */
+  --toque: 3rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+h1 {
+  margin: 0 0 var(--espaco);
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0 0 0.5rem;
+}
+
+a {
+  color: var(--cor-destaque);
+}
+
+/* Cabeçalho */
+
+.cabecalho {
+  background: var(--cor-destaque);
+}
+
+.cabecalho__marca {
+  display: flex;
+  align-items: center;
+  min-height: var(--toque);
+  padding: 0.5rem var(--espaco);
+  color: var(--cor-destaque-texto);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Conteúdo */
+
+.conteudo {
+  padding: var(--espaco);
+}
+
+/* Controles de formulário e botões: áreas de toque grandes */
+
+input,
+button,
+.botao {
+  min-height: var(--toque);
+  font: inherit;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+
+button,
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: var(--raio);
+  background: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--cor-texto);
+  outline-offset: 2px;
+}
+
+/* Estado vazio */
+
+.vazio {
+  padding: 1.5rem var(--espaco);
+  border: 1px dashed var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  color: var(--cor-texto-suave);
+  text-align: center;
+}
+
+.vazio__titulo {
+  color: var(--cor-texto);
+  font-weight: 600;
+}
+
+.vazio p:last-child {
+  margin-bottom: 0;
+}
+
+/* Telas maiores: o conteúdo ganha largura máxima e fica centralizado */
+
+@media (min-width: 40em) {
+  .cabecalho__marca,
+  .conteudo {
+    max-width: 40rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .conteudo {
+    padding-top: 1.5rem;
+  }
+}

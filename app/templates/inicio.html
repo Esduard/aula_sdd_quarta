@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+  <h1>Suas Listas</h1>
+
+  {% if not listas %}
+    <section class="vazio">
+      <p class="vazio__titulo">Ainda não há nenhuma Lista.</p>
+      <p>Crie a primeira Lista para começar a organizar suas compras.</p>
+    </section>
+  {% endif %}
+{% endblock %}

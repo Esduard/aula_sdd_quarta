@@ -1,0 +1,11 @@
+# Dados do app (arquivo JSON local, criado na primeira gravação)
+app/dados.json
+
+# Caches do Python e do pytest
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Ambientes virtuais
+.venv/
+venv/
