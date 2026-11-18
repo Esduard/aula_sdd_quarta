@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ lista.nome }} · Lista de Compras{% endblock %}
+
+{% block conteudo %}
+  <a class="voltar" href="{{ url_for('inicio') }}">&larr; Todas as Listas</a>
+
+  <h1>{{ lista.nome }}</h1>
+
+  <form class="formulario" method="post"
+        action="{{ url_for('adicionar_item', id_da_lista=lista.id) }}">
+    {% if erro %}
+      <p class="erro" id="erro-nome" role="alert">{{ erro }}</p>
+    {% endif %}
+    <label class="formulario__rotulo" for="nome">Nome do novo Item</label>
+    <input type="text" id="nome" name="nome" value="{{ nome|default('') }}"
+           autocomplete="off"{% if erro %} aria-invalid="true" aria-describedby="erro-nome"{% endif %}>
+    <label class="formulario__rotulo" for="quantidade">Quantidade (opcional)</label>
+    <div class="formulario__linha">
+      <input type="text" id="quantidade" name="quantidade"
+             value="{{ quantidade|default('') }}" autocomplete="off"
+             placeholder="2 L, 1 dúzia...">
+      <button type="submit">Adicionar Item</button>
+    </div>
+  </form>
+
+  {% if lista.itens %}
+    <ul class="itens">
+      {% for item in lista.itens %}
+        <li class="itens__item">
+          <span class="itens__nome">{{ item.nome }}</span>
+          {% if item.quantidade %}
+            <span class="itens__quantidade">{{ item.quantidade }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <section class="vazio">
+      <p class="vazio__titulo">Esta Lista ainda não tem Itens.</p>
+      <p>Use o formulário acima para adicionar o primeiro Item.</p>
+    </section>
+  {% endif %}
+{% endblock %}

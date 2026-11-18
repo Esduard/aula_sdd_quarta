@@ -18,7 +18,9 @@
   {% if listas %}
     <ul class="listas">
       {% for lista in listas %}
-        <li class="listas__lista">{{ lista.nome }}</li>
+        <li>
+          <a class="listas__lista" href="{{ url_for('ver_lista', id_da_lista=lista.id) }}">{{ lista.nome }}</a>
+        </li>
       {% endfor %}
     </ul>
   {% else %}

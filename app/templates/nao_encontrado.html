@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block titulo %}Não encontrado · Lista de Compras{% endblock %}
+
+{% block conteudo %}
+  <h1>Não encontrado</h1>
+  <p>{{ mensagem }}</p>
+  <a class="botao" href="{{ url_for('inicio') }}">Voltar para todas as Listas</a>
+{% endblock %}
